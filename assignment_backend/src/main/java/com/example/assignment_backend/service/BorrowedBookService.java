@@ -20,6 +20,8 @@ import com.example.assignment_backend.mapper.BookMapper;
 import com.example.assignment_backend.mapper.MemberMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import com.example.assignment_backend.repository.BorrowedBookSpecifications;
 
 @Service
 @RequiredArgsConstructor
@@ -42,9 +44,27 @@ public class BorrowedBookService {
     }
 
     @Transactional(readOnly = true)
-    public Page<BorrowedBookResponseDto> getAllBorrowedBooks(Pageable pageable) {
-        return repository.findAll(pageable).map(this::toBorrowedBookResponseDto);
+    public Page<BorrowedBookResponseDto> getAllBorrowedBooks(String title, String memberName, LocalDate borrowDate,
+            Pageable pageable) {
+        Specification<BorrowedBook> spec = null;
+        if (title != null && !title.trim().isEmpty()) {
+            spec = BorrowedBookSpecifications.hasTitle(title);
+        }
+        if (memberName != null && !memberName.trim().isEmpty()) {
+            Specification<BorrowedBook> newSpec = BorrowedBookSpecifications.hasMemberName(memberName);
+            spec = spec == null ? newSpec : spec.or(newSpec);
+        }
+        if (borrowDate != null) {
+            Specification<BorrowedBook> newSpec = BorrowedBookSpecifications.hasBorrowDate(borrowDate);
+            spec = spec == null ? newSpec : spec.and(newSpec);
+        }
+
+        if (spec == null) {
+            return repository.findAll(pageable).map(this::toBorrowedBookResponseDto);
+        }
+        return repository.findAll(spec, pageable).map(this::toBorrowedBookResponseDto);
     }
+
     public Optional<BorrowedBookResponseDto> getById(Long id) {
         return repository.findById(id).map(this::toBorrowedBookResponseDto);
     }
@@ -80,18 +100,4 @@ public class BorrowedBookService {
         return toBorrowedBookResponseDto(repository.save(updated));
     }
 
-    public List<BorrowedBookResponseDto> search(String title, String memberName, LocalDate borrowDate) {
-        List<BorrowedBook> results = repository.findAll();
-        if (title != null && !title.trim().isEmpty()) {
-            results.retainAll(repository.findByBook_TitleContainingIgnoreCase(title.trim()));
-            System.out.println(results);
-        }
-        if (memberName != null && !memberName.trim().isEmpty()) {
-            results.retainAll(repository.findByMember_NameContainingIgnoreCase(memberName.trim()));
-        }
-        if (borrowDate != null) {
-            results.retainAll(repository.findByBorrowDate(borrowDate));
-        }
-        return results.stream().map(this::toBorrowedBookResponseDto).collect(Collectors.toList());
-    }
 }

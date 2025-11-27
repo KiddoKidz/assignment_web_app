@@ -5,12 +5,12 @@ import com.example.assignment_backend.dto.BorrowedBookCreateDto;
 import com.example.assignment_backend.dto.BorrowedBookResponseDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.*;
 import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.*;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 
 @RestController
 @RequestMapping("/api/borrowed-books")
@@ -20,8 +20,12 @@ public class BorrowedBookController {
 
     @GetMapping
     public ResponseEntity<Page<BorrowedBookResponseDto>> getAllBorrowedBooks(
-            @PageableDefault(size = 10, sort = {"id"}, direction = Sort.Direction.ASC) Pageable pageable) {
-        Page<BorrowedBookResponseDto> borrowedBooks = service.getAllBorrowedBooks(pageable);
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String memberName,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate borrowDate,
+            @PageableDefault(size = 10, sort = { "id" }, direction = Sort.Direction.ASC) Pageable pageable) {
+        Page<BorrowedBookResponseDto> borrowedBooks = service.getAllBorrowedBooks(title, memberName, borrowDate,
+                pageable);
         return ResponseEntity.ok(borrowedBooks);
     }
 
@@ -42,14 +46,6 @@ public class BorrowedBookController {
     public ResponseEntity<BorrowedBookResponseDto> update(@PathVariable Long id,
             @Valid @RequestBody BorrowedBookCreateDto dto) {
         return ResponseEntity.ok(service.update(id, dto));
-    }
-
-    @GetMapping("/search")
-    public ResponseEntity<List<BorrowedBookResponseDto>> search(
-            @RequestParam(required = false) String title,
-            @RequestParam(required = false) String memberName,
-            @RequestParam(required = false) LocalDate borrowDate) {
-        return ResponseEntity.ok(service.search(title, memberName, borrowDate));
     }
 
     @DeleteMapping("/{id}")
