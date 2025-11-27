@@ -7,9 +7,9 @@ export const BorrowedBookInputSchema = z.object({
     id: z.number().int().optional(),
     bookId: z.number().int().positive(),
     memberId: z.number().int().positive(),
-    borrowDate: z.coerce.date(),
-    returnDate: z.coerce.date().nullable().optional()
-        .transform((val) => val === null ? undefined : val),
+    borrowDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)'),
+    returnDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)').nullable().optional()
+        .transform((val) => val === null || val === '' ? undefined : val),
 });
 
 export type BorrowedBookInput = z.infer<typeof BorrowedBookInputSchema>;

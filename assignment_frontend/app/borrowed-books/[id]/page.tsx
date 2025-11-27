@@ -28,6 +28,7 @@ import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverTrigger, PopoverContent } from '@radix-ui/react-popover'
 import { ChevronDownIcon } from 'lucide-react'
 import { useEffect, useMemo } from 'react'
+import { formatDate, parseDateString } from '@/lib/utils'
 
 export default function UpdateBorrowedBookPage() {
     const params = useParams()
@@ -55,8 +56,8 @@ export default function UpdateBorrowedBookPage() {
             reset({
                 bookId: borrowedBook.book.id,
                 memberId: borrowedBook.member.id,
-                borrowDate: borrowedBook.borrowDate,
-                returnDate: borrowedBook.returnDate,
+                borrowDate: formatDate(borrowedBook.borrowDate),
+                returnDate: borrowedBook.returnDate ? formatDate(borrowedBook.returnDate) : undefined,
             })
         }
     }, [borrowedBook, reset])
@@ -208,17 +209,17 @@ export default function UpdateBorrowedBookPage() {
                                                 id="date"
                                                 className="w-48 justify-between font-normal"
                                             >
-                                                {field.value ? field.value.toLocaleDateString() : "Select date"}
+                                                {field.value || "Select date"}
                                                 <ChevronDownIcon />
                                             </Button>
                                         </PopoverTrigger>
                                         <PopoverContent className="w-auto overflow-hidden p-0 bg-white shadow-md rounded-md" align="start">
                                             <Calendar
                                                 mode="single"
-                                                selected={field.value}
+                                                selected={field.value ? parseDateString(field.value) : undefined}
                                                 captionLayout="dropdown"
                                                 onSelect={(date) => {
-                                                    field.onChange(date)
+                                                    field.onChange(date ? formatDate(date) : '')
                                                 }}
                                             />
                                         </PopoverContent>
@@ -242,17 +243,17 @@ export default function UpdateBorrowedBookPage() {
                                                 id="date"
                                                 className="w-48 justify-between font-normal"
                                             >
-                                                {field.value ? field.value.toLocaleDateString() : "Select date"}
+                                                {field.value || "Select date"}
                                                 <ChevronDownIcon />
                                             </Button>
                                         </PopoverTrigger>
                                         <PopoverContent className="w-auto overflow-hidden p-0 bg-white shadow-md rounded-md" align="start">
                                             <Calendar
                                                 mode="single"
-                                                selected={field.value}
+                                                selected={field.value ? parseDateString(field.value) : undefined}
                                                 captionLayout="dropdown"
                                                 onSelect={(date) => {
-                                                    field.onChange(date)
+                                                    field.onChange(date ? formatDate(date) : '')
                                                 }}
                                             />
                                         </PopoverContent>

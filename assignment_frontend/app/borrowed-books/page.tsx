@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useQuery } from '@tanstack/react-query'
 import {
     Card,
     CardContent,
@@ -22,10 +21,9 @@ import { ErrorState } from '@/components/list/ErrorState'
 import { EmptyState } from '@/components/list/EmptyState'
 import { Pagination } from '@/components/list/Pagination'
 import { useEffect, useState, Suspense } from 'react'
-import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverTrigger, PopoverContent } from '@radix-ui/react-popover'
-import { date, set } from 'zod'
+import { parseDateString, formatDate } from '@/lib/utils'
 
 
 function BorrowedBooksContent() {
@@ -37,7 +35,7 @@ function BorrowedBooksContent() {
     const [searchBorrowDate, setSearchBorrowDate] = useState<Date | undefined>(undefined)
     const [searchInput, setSearchInput] = useState(urlSearch)
     const debouncedSearch = useDebounce(searchInput, 500)
-    const borrowDateStr = searchBorrowDate ? searchBorrowDate.toISOString().split('T')[0] : ''
+    const borrowDateStr = searchBorrowDate ? formatDate(searchBorrowDate) : ''
 
     useEffect(() => {
         setSearchInput(urlSearch)
@@ -45,8 +43,8 @@ function BorrowedBooksContent() {
 
     useEffect(() => {
         if (urlBorrowDate) {
-            const date = new Date(urlBorrowDate)
-            if (!isNaN(date.getTime())) {
+            const date = parseDateString(urlBorrowDate)
+            if (date && !isNaN(date.getTime())) {
                 setSearchBorrowDate(date)
             } else {
                 setSearchBorrowDate(undefined)
@@ -152,7 +150,7 @@ function BorrowedBooksContent() {
                             id="date"
                             className="w-72 justify-between font-normal"
                         >
-                            {searchBorrowDate?.toLocaleDateString('en-CA') ?? 'Select borrow date'}
+                            {searchBorrowDate ? formatDate(searchBorrowDate) : 'Select borrow date'}
                             <ChevronDownIcon />
                         </Button>
                     </PopoverTrigger>
@@ -163,7 +161,7 @@ function BorrowedBooksContent() {
                             captionLayout="dropdown"
                             onSelect={(date) => {
                                 setSearchBorrowDate(date)
-                                const dateStr = date?.toLocaleDateString('en-CA') ?? ''
+                                const dateStr = date ? formatDate(date) : ''
                                 const searchParam = urlSearch ? `&search=${encodeURIComponent(urlSearch)}` : ''
                                 router.replace(`/borrowed-books?borrowDate=${dateStr}&page=0${searchParam}`)
                             }}
@@ -192,3 +190,4 @@ export default function BorrowedBooksPage() {
         </Suspense>
     )
 }
+
