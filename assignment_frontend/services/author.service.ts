@@ -1,7 +1,6 @@
 import { apiClient } from "@/lib/apiClient";
-import { type Author } from "@/schemas/author";
+import { type Author, type AuthorsPageResponse } from "@/schemas/author";
 
-// CREATE
 export async function createAuthor(data: Partial<Author>): Promise<Author> {
     const response = await apiClient("/authors", {
         method: "POST",
@@ -11,13 +10,11 @@ export async function createAuthor(data: Partial<Author>): Promise<Author> {
     return response as Author;
 }
 
-// READ
 export async function getAuthorById(id: number): Promise<Author> {
     const response = await apiClient(`/authors/${id}`);
     return response as Author;
 }
 
-// UPDATE
 export async function updateAuthor(id: number, data: Partial<Author>): Promise<Author> {
     const response = await apiClient(`/authors/${id}`, {
         method: "PUT",
@@ -27,13 +24,15 @@ export async function updateAuthor(id: number, data: Partial<Author>): Promise<A
     return response as Author;
 }
 
-// DELETE
 export async function deleteAuthor(id: number): Promise<void> {
     await apiClient(`/authors/${id}`, { method: "DELETE" });
 }
 
-// Optional: GET ALL
-export async function getAllAuthors(): Promise<Author[]> {
-    const response = await apiClient("/authors");
-    return response as Author[];
+export async function getAllAuthors(page: number = 0, size: number = 10): Promise<AuthorsPageResponse> {
+    const params = new URLSearchParams({
+        page: page.toString(),
+        size: size.toString(),
+    });
+    const response = await apiClient(`/authors?${params}`);
+    return response as AuthorsPageResponse;
 }

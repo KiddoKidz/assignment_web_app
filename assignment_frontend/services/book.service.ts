@@ -1,40 +1,39 @@
 import { apiClient } from "@/lib/apiClient";
-import { type Book } from "@/schemas/book";
+import { BookResponseSchema, type BookInput, type BookResponse, type BooksPageResponse } from "@/schemas/book";
 
 
-// CREATE
-export async function createBook(data: Partial<Book>): Promise<Book> {
+export async function createBook(data: Partial<BookInput>): Promise<BookResponse> {
     const response = await apiClient("/books", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
     });
-    return response as Book;
+    return BookResponseSchema.parse(response);
 }
 
-// READ
-export async function getBookById(id: number): Promise<Book> {
+export async function getBookById(id: number): Promise<BookResponse> {
     const response = await apiClient(`/books/${id}`);
-    return response as Book;
+    return response as BookResponse;
 }
 
-// UPDATE
-export async function updateBook(id: number, data: Partial<Book>): Promise<Book> {
+export async function updateBook(id: number, data: Partial<BookInput>): Promise<BookResponse> {
     const response = await apiClient(`/books/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
     });
-    return response as Book;
+    return BookResponseSchema.parse(response);
 }
 
-// DELETE
 export async function deleteBook(id: number): Promise<void> {
     await apiClient(`/books/${id}`, { method: "DELETE" });
 }
 
-// Optional: GET ALL
-export async function getAllBooks(): Promise<Book[]> {
-    const response = await apiClient("/books");
-    return response as Book[];
+export async function getAllBooks(page: number = 0, size: number = 10): Promise<BooksPageResponse> {
+    const params = new URLSearchParams({
+        page: page.toString(),
+        size: size.toString(),
+    });
+    const response = await apiClient(`/books?${params}`);
+    return response as BooksPageResponse;
 }

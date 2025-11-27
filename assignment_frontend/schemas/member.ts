@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PageInfo } from "./pageInfo";
 
 export const MemberSchema = z.object({
     id: z.number().int().optional(),
@@ -8,3 +9,8 @@ export const MemberSchema = z.object({
 });
 
 export type Member = z.infer<typeof MemberSchema>;
+
+export interface MembersPageResponse {
+    content: Member[];
+    page: PageInfo;
+}

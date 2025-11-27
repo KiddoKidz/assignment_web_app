@@ -1,8 +1,7 @@
 import { apiClient } from "@/lib/apiClient";
-import { type Member } from "@/schemas/member";
+import { type Member, type MembersPageResponse } from "@/schemas/member";
 
 
-// CREATE
 export async function createMember(data: Partial<Member>): Promise<Member> {
     const response = await apiClient("/members", {
         method: "POST",
@@ -12,13 +11,11 @@ export async function createMember(data: Partial<Member>): Promise<Member> {
     return response as Member;
 }
 
-// READ
 export async function getMemberById(id: number): Promise<Member> {
     const response = await apiClient(`/members/${id}`);
     return response as Member;
 }
 
-// UPDATE
 export async function updateMember(id: number, data: Partial<Member>): Promise<Member> {
     const response = await apiClient(`/members/${id}`, {
         method: "PUT",
@@ -28,13 +25,15 @@ export async function updateMember(id: number, data: Partial<Member>): Promise<M
     return response as Member;
 }
 
-// DELETE
 export async function deleteMember(id: number): Promise<void> {
     await apiClient(`/members/${id}`, { method: "DELETE" });
 }
 
-// Optional: GET ALL
-export async function getAllMembers(): Promise<Member[]> {
-    const response = await apiClient("/members");
-    return response as Member[];
+export async function getAllMembers(page: number = 0, size: number = 10): Promise<MembersPageResponse> {
+    const params = new URLSearchParams({
+        page: page.toString(),
+        size: size.toString(),
+    });
+    const response = await apiClient(`/members?${params}`);
+    return response as MembersPageResponse;
 }

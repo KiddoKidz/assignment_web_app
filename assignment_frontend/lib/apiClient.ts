@@ -11,5 +11,9 @@ export async function apiClient(url: string, options?: RequestInit) {
         throw new Error(`API error: ${res.status}`);
     }
 
-    return res.json();
+    const contentType = res.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+        return await res.json();
+    }
+    return null;  // Handles DELETE/etc with no body
 }

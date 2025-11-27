@@ -1,11 +1,29 @@
 import { z } from "zod";
+import { PageInfo } from "./pageInfo";
+import { BookResponseSchema } from "./book";
+import { MemberSchema } from "./member";
 
-export const BorrowedBookSchema = z.object({
+export const BorrowedBookInputSchema = z.object({
     id: z.number().int().optional(),
-    book_id: z.number().int().positive(),
-    member_id: z.number().int().positive(),
-    borrow_date: z.coerce.date<Date>(),
-    return_date: z.coerce.date<Date>().optional(),
+    bookId: z.number().int().positive(),
+    memberId: z.number().int().positive(),
+    borrowDate: z.coerce.date<Date>(),
+    returnDate: z.coerce.date<Date>().optional(),
 });
 
-export type BorrowedBook = z.infer<typeof BorrowedBookSchema>;
+export type BorrowedBookInput = z.infer<typeof BorrowedBookInputSchema>;
+
+export const BorrowedBookResponseSchema = z.object({
+    id: z.number().int().positive(),
+    book: BookResponseSchema,
+    member: MemberSchema,
+    borrowDate: z.coerce.date<Date>(),
+    returnDate: z.coerce.date<Date>().optional(),
+})
+
+export type BorrowedBookResponse = z.infer<typeof BorrowedBookResponseSchema>;
+
+export interface BorrowedBooksPageResponse {
+    content: BorrowedBookResponse[];
+    page: PageInfo;
+}

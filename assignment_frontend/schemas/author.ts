@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { PageInfo } from "./pageInfo";
+
 
 export const AuthorSchema = z.object({
     id: z.number().int().optional(),
@@ -6,3 +8,8 @@ export const AuthorSchema = z.object({
 });
 
 export type Author = z.infer<typeof AuthorSchema>;
+
+export interface AuthorsPageResponse {
+    content: Author[];
+    page: PageInfo;
+}

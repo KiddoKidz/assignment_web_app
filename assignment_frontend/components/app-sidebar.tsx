@@ -38,8 +38,8 @@ const data = {
           url: "/members",
         },
         {
-          title: "Borrow Books",
-          url: "/borrow-books",
+          title: "Borrowed Books",
+          url: "/borrowed-books",
         },
       ],
     },

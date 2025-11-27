@@ -1,35 +1,28 @@
 'use client'
 
-import { useAuthorForm } from '@/hooks/useAuthorForm'
+import { useAuthorForm } from '@/hooks/author'
 import { createAuthor } from '@/services/author.service'
 import type { Author } from '@/schemas/author'
 
 import { useRouter } from 'next/navigation'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { authorKeys } from '@/lib/queryKeys'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-
 import {
     Card,
     CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card'
+    CardFooter,
 
-import {
-    Breadcrumb,
-    BreadcrumbItem,
-    BreadcrumbLink,
-    BreadcrumbList,
-    BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb'
+} from '@/components/ui/card'
 
 import { toast } from 'sonner'
 
 export default function CreateAuthorPage() {
     const router = useRouter()
+    const queryClient = useQueryClient()
 
     const form = useAuthorForm()
 
@@ -39,39 +32,28 @@ export default function CreateAuthorPage() {
         formState: { errors, isSubmitting, isValid },
     } = form
 
-    const onSubmit = async (data: Author) => {
-        try {
-            await createAuthor(data)
+    const createMutation = useMutation({
+        mutationFn: (data: Author) => createAuthor(data),
+        onSuccess: () => {
             toast.success("Author created successfully")
+            queryClient.invalidateQueries({ queryKey: authorKeys.lists() })
             router.push("/authors")
-            router.refresh()
-        } catch (error) {
+        },
+        onError: () => {
             toast.error("Failed to create author")
-        }
+        },
+    })
+
+    const onSubmit = (data: Author) => {
+        createMutation.mutate(data)
     }
 
     return (
-        <div className="space-y-6">
-            <Breadcrumb>
-                <BreadcrumbList>
-                    <BreadcrumbItem>
-                        <BreadcrumbLink href="/authors">Authors</BreadcrumbLink>
-                    </BreadcrumbItem>
-                    <BreadcrumbSeparator />
-                    <BreadcrumbItem>
-                        <span className="font-normal text-muted-foreground">Create Author</span>
-                    </BreadcrumbItem>
-                </BreadcrumbList>
-            </Breadcrumb>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Create Author</CardTitle>
-                    <CardDescription>
-                        Enter the new author&apos;s name below.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="flex flex-1 flex-col gap-4 p-4">
+            <h1 className="text-3xl font-bold tracking-tight">Create Author</h1>
+            <Card className="w-full">
+                <CardContent className="space-y-6">
+                    <form id="author-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                         <div className="space-y-2">
                             <Label htmlFor="name">Name</Label>
                             <Input
@@ -88,27 +70,30 @@ export default function CreateAuthorPage() {
                                 <p className="text-sm text-destructive">{errors.name.message}</p>
                             )}
                         </div>
-                        <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => router.push("/authors")}
-                                disabled={isSubmitting}
-                                className="w-full sm:w-auto"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="submit"
-                                disabled={!isValid || isSubmitting}
-                                className="w-full sm:w-auto"
-                            >
-                                {isSubmitting ? "Creating..." : "Create Author"}
-                            </Button>
-                        </div>
                     </form>
                 </CardContent>
+
+                <CardFooter className="flex justify-end gap-3 pt-2 sm:flex-row">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => router.push("/authors")}
+                        disabled={isSubmitting || createMutation.isPending}
+                        className="w-full sm:w-auto"
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        type="submit"
+                        form="author-form"
+                        disabled={!isValid || isSubmitting || createMutation.isPending}
+                        className="w-full sm:w-auto"
+                    >
+                        {isSubmitting || createMutation.isPending ? "Creating..." : "Create Author"}
+                    </Button>
+                </CardFooter>
             </Card>
         </div>
     )
 }
+
