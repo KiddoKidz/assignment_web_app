@@ -23,6 +23,8 @@ export const memberKeys = {
 export const borrowedBookKeys = {
     all: (filters?: { page: number; limit: number }): QueryKey =>
         ['borrowedBooks', filters ?? {}] as QueryKey,
+    list: (filters: { page: number; limit: number; search?: string; borrowDate?: string }): QueryKey =>
+        ['borrowedBooks', 'list', filters] as QueryKey,
     lists: (): QueryKey => ['borrowedBooks'] as QueryKey,
     details: (id: number): QueryKey => ['borrowedBooks', id] as QueryKey,
 } as const;

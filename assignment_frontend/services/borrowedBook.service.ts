@@ -29,13 +29,21 @@ export async function deleteBorrowedBook(id: number): Promise<void> {
     await apiClient(`/borrowed-books/${id}`, { method: "DELETE" });
 }
 
-export async function getAllBorrowedBooks(page: number = 0, size: number = 10): Promise<BorrowedBooksPageResponse> {
+export async function getAllBorrowedBooks(page: number = 0, size: number = 10, search?: string, borrowDate?: string): Promise<BorrowedBooksPageResponse> {
     const params = new URLSearchParams({
         page: page.toString(),
         size: size.toString(),
     });
+    if (search) {
+        params.set('title', search);
+        params.set('memberName', search);
+    }
+    if (borrowDate) {
+        params.set('borrowDate', borrowDate);
+    }
     const rawResponse = await apiClient(`/borrowed-books?${params}`);
     const parsedContent = rawResponse.content.map((item: unknown) => BorrowedBookResponseSchema.parse(item));
+    console.log(rawResponse, parsedContent)
     return {
         content: parsedContent,
         page: rawResponse.page,

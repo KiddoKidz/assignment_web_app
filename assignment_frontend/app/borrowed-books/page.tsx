@@ -12,28 +12,60 @@ import {
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { CalendarArrowDown, CalendarArrowUp, IdCard, Pen, Trash2 } from 'lucide-react'
-import { useDeleteBorrowedBook } from '@/hooks/borrowedBook'
+import { CalendarArrowDown, CalendarArrowUp, ChevronDownIcon, IdCard, Pen, Trash2 } from 'lucide-react'
+import { Calendar } from '@/components/ui/calendar'
+import { useDeleteBorrowedBook, useBorrowedBooks } from '@/hooks/borrowedBook'
+import { useDebounce } from '@/hooks/use-debounce'
 
-import { borrowedBookKeys } from '@/lib/queryKeys'
-import { getAllBorrowedBooks } from '@/services/borrowedBook.service'
-import type { BorrowedBooksPageResponse } from '@/schemas/borrowedBook'
 import { LoadingSkeleton } from '@/components/list/LoadingGrid'
 import { ErrorState } from '@/components/list/ErrorState'
 import { EmptyState } from '@/components/list/EmptyState'
 import { Pagination } from '@/components/list/Pagination'
-import { useEffect, Suspense } from 'react'
+import { useEffect, useState, Suspense } from 'react'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import { Popover, PopoverTrigger, PopoverContent } from '@radix-ui/react-popover'
+import { date, set } from 'zod'
 
 
 function BorrowedBooksContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
-    const page = Number(searchParams.get('page')) || 0
+    const page = parseInt(searchParams.get('page') || '0', 10)
+    const urlSearch = searchParams.get('search') || ''
+    const urlBorrowDate = searchParams.get('borrowDate') || ''
+    const [searchBorrowDate, setSearchBorrowDate] = useState<Date | undefined>(undefined)
+    const [searchInput, setSearchInput] = useState(urlSearch)
+    const debouncedSearch = useDebounce(searchInput, 500)
+    const borrowDateStr = searchBorrowDate ? searchBorrowDate.toISOString().split('T')[0] : ''
 
-    const { data, isLoading, error } = useQuery<BorrowedBooksPageResponse>({
-        queryKey: borrowedBookKeys.all({ page, limit: 12 }),
-        queryFn: () => getAllBorrowedBooks(page, 10),
-    })
+    useEffect(() => {
+        setSearchInput(urlSearch)
+    }, [urlSearch])
+
+    useEffect(() => {
+        if (urlBorrowDate) {
+            const date = new Date(urlBorrowDate)
+            if (!isNaN(date.getTime())) {
+                setSearchBorrowDate(date)
+            } else {
+                setSearchBorrowDate(undefined)
+            }
+        } else {
+            setSearchBorrowDate(undefined)
+        }
+    }, [urlBorrowDate])
+
+    useEffect(() => {
+        if (debouncedSearch !== urlSearch) {
+            const searchParam = debouncedSearch ? `&search=${encodeURIComponent(debouncedSearch)}` : ''
+            const borrowParam = urlBorrowDate ? `&borrowDate=${urlBorrowDate}` : ''
+            router.push(`/borrowed-books?page=0${searchParam}${borrowParam}`)
+        }
+    }, [debouncedSearch, urlSearch, urlBorrowDate, router])
+
+
+    const { data, isLoading, error } = useBorrowedBooks(page, debouncedSearch, borrowDateStr)
     const { mutate, isPending, isSuccess: isDeleteSuccess } = useDeleteBorrowedBook()
 
     useEffect(() => {
@@ -42,8 +74,10 @@ function BorrowedBooksContent() {
         }
     }, [isDeleteSuccess, router])
 
-    const goToPage = (page: number) => {
-        router.push(`/borrowedBooks?page=${page}`)
+    const goToPage = (n: number) => {
+        const searchParam = urlSearch ? `&search=${encodeURIComponent(urlSearch)}` : ''
+        const borrowParam = urlBorrowDate ? `&borrowDate=${urlBorrowDate}` : ''
+        router.push(`/borrowed-books?page=${n}${searchParam}${borrowParam}`)
     }
 
     const totalPages = data?.page.totalPages ?? 0
@@ -101,6 +135,41 @@ function BorrowedBooksContent() {
                 <Button asChild>
                     <Link href="/borrowed-books/create">+ New Borrowed Book</Link>
                 </Button>
+            </div>
+            <div className="flex items-center gap-4 justify-between">
+                <Input
+                    id="search"
+                    type="text"
+                    placeholder="Search..."
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    className='flex-1'
+                />
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button
+                            variant="outline"
+                            id="date"
+                            className="w-72 justify-between font-normal"
+                        >
+                            {searchBorrowDate?.toLocaleDateString('en-CA') ?? 'Select borrow date'}
+                            <ChevronDownIcon />
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+                        <Calendar
+                            mode="single"
+                            selected={searchBorrowDate}
+                            captionLayout="dropdown"
+                            onSelect={(date) => {
+                                setSearchBorrowDate(date)
+                                const dateStr = date?.toLocaleDateString('en-CA') ?? ''
+                                const searchParam = urlSearch ? `&search=${encodeURIComponent(urlSearch)}` : ''
+                                router.replace(`/borrowed-books?borrowDate=${dateStr}&page=0${searchParam}`)
+                            }}
+                        />
+                    </PopoverContent>
+                </Popover>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {mainComponent}
