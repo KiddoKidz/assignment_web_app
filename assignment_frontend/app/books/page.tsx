@@ -22,17 +22,17 @@ import { LoadingSkeleton } from '@/components/list/LoadingGrid'
 import { ErrorState } from '@/components/list/ErrorState'
 import { EmptyState } from '@/components/list/EmptyState'
 import { Pagination } from '@/components/list/Pagination'
-import { useEffect } from 'react'
+import { useEffect, Suspense } from 'react'
 
 
-export default function BooksPage() {
+function BooksContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const page = Number(searchParams.get('page')) || 0
 
     const { data, isLoading, error } = useQuery<BooksPageResponse>({
         queryKey: bookKeys.all({ page, limit: 12 }),
-        queryFn: () => getAllBooks(page, 10),
+        queryFn: () => getAllBooks(page, 12),
     })
     const { mutate, isPending, isSuccess: isDeleteSuccess } = useDeleteBook()
 
@@ -51,7 +51,7 @@ export default function BooksPage() {
     let mainComponent = null
 
     if (isLoading) {
-        mainComponent = <LoadingSkeleton numItems={9} />
+        mainComponent = <LoadingSkeleton numItems={12} />
     } else if (error) {
         mainComponent = <ErrorState message="Error fetching books" />
     } else if (!data?.content?.length) {
@@ -113,5 +113,13 @@ export default function BooksPage() {
                 />
             )}
         </div>
+    )
+}
+
+export default function BooksPage() {
+    return (
+        <Suspense fallback={<LoadingSkeleton numItems={12} />}>
+            <BooksContent />
+        </Suspense>
     )
 }

@@ -22,17 +22,17 @@ import { LoadingSkeleton } from '@/components/list/LoadingGrid'
 import { ErrorState } from '@/components/list/ErrorState'
 import { EmptyState } from '@/components/list/EmptyState'
 import { Pagination } from '@/components/list/Pagination'
-import { useEffect } from 'react'
+import { useEffect, Suspense } from 'react'
 
 
-export default function MembersPage() {
+function MembersContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const page = Number(searchParams.get('page')) || 0
 
     const { data, isLoading, error } = useQuery<MembersPageResponse>({
         queryKey: memberKeys.all({ page, limit: 12 }),
-        queryFn: () => getAllMembers(page, 10),
+        queryFn: () => getAllMembers(page, 12),
     })
     const { mutate, isPending, isSuccess: isDeleteSuccess } = useDeleteMember()
 
@@ -51,7 +51,7 @@ export default function MembersPage() {
     let mainComponent = null
 
     if (isLoading) {
-        mainComponent = <LoadingSkeleton numItems={9} />
+        mainComponent = <LoadingSkeleton numItems={12} />
     } else if (error) {
         mainComponent = <ErrorState message="Error fetching members" />
     } else if (!data?.content?.length) {
@@ -110,5 +110,13 @@ export default function MembersPage() {
                 />
             )}
         </div>
+    )
+}
+
+export default function MembersPage() {
+    return (
+        <Suspense fallback={<LoadingSkeleton numItems={12} />}>
+            <MembersContent />
+        </Suspense>
     )
 }

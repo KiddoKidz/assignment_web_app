@@ -22,10 +22,10 @@ import { LoadingSkeleton } from '@/components/list/LoadingGrid'
 import { ErrorState } from '@/components/list/ErrorState'
 import { EmptyState } from '@/components/list/EmptyState'
 import { Pagination } from '@/components/list/Pagination'
-import { useEffect } from 'react'
+import { useEffect, Suspense } from 'react'
 
 
-export default function BorrowedBooksPage() {
+function BorrowedBooksContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const page = Number(searchParams.get('page')) || 0
@@ -113,5 +113,13 @@ export default function BorrowedBooksPage() {
                 />
             )}
         </div>
+    )
+}
+
+export default function BorrowedBooksPage() {
+    return (
+        <Suspense fallback={<LoadingSkeleton numItems={12} />}>
+            <BorrowedBooksContent />
+        </Suspense>
     )
 }

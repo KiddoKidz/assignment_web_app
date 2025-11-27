@@ -21,10 +21,10 @@ import { LoadingSkeleton } from '@/components/list/LoadingGrid'
 import { ErrorState } from '@/components/list/ErrorState'
 import { EmptyState } from '@/components/list/EmptyState'
 import { Pagination } from '@/components/list/Pagination'
-import { useEffect } from 'react'
+import { useEffect, Suspense } from 'react'
 
 
-export default function AuthorsPage() {
+function AuthorsContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const page = Number(searchParams.get('page')) || 0
@@ -101,5 +101,13 @@ export default function AuthorsPage() {
                 />
             )}
         </div>
+    )
+}
+
+export default function AuthorsPage() {
+    return (
+        <Suspense fallback={<LoadingSkeleton numItems={12} />}>
+            <AuthorsContent />
+        </Suspense>
     )
 }
